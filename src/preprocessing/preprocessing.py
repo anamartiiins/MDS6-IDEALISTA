@@ -1,11 +1,20 @@
 import pandas as pd
-from src.constants import NEW_COLUMNS_NAMES, REMOVE_COLUMNS_BY_INPUT
+from src.constants import (
+    NEW_COLUMNS_NAMES,
+    REMOVE_COLUMNS_BY_INPUT,
+    NUM_VARIABLES_TO_SEE_DISTRIBUTION,
+    BINARY_VARIABLES
+)
 from src.preprocessing.preprocessing_utils import (
     generate_pandas_profiling_report,
     remove_duplicated_anuncios_id,
     find_single_value_columns,
-    treatment_missing_values
+    treatment_missing_values,
+    visualize_distribution,
+    visualize_binary_distribution
 )
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def dataset_preprocessing(df_assets: pd.DataFrame) -> pd.DataFrame:
@@ -32,6 +41,13 @@ def dataset_preprocessing(df_assets: pd.DataFrame) -> pd.DataFrame:
 
     # Missing values
     df_assets = treatment_missing_values(df=df_assets)
+
+    # See distributions
+    # visualize_distribution(
+    #     df=df_assets, numerical_columns=NUM_VARIABLES_TO_SEE_DISTRIBUTION
+    # )
+
+    visualize_binary_distribution(df=df_assets, binary_columns=BINARY_VARIABLES)
 
     print(df_assets.shape)
     return df_assets

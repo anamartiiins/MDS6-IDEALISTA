@@ -46,8 +46,45 @@ NEW_COLUMNS_NAMES = [
 ]
 
 
-REMOVE_COLUMNS_BY_INPUT = [
-    "fecha",
-    "precio_unitario_km2",
-    "id_anuncio"
+REMOVE_COLUMNS_BY_INPUT = ["fecha", "precio_unitario_km2", "id_anuncio"]
+
+NUM_VARIABLES_TO_SEE_DISTRIBUTION = [
+    "precio",
+    "n_piso",
+    "n_habitaciones",
+    "n_banos",
+    "area_construida",
+    "amueblado",
+    "precio_parking",
+    "cat_ano_construccion",
+    "cat_n_max_pisos",
+    "cat_n_vecinos",
+    "cat_calidad",
+    "distancia_puerta_sol",
+    "distancia_metro",
+    "distancia_castellana",
+]
+
+BINARY_VARIABLES = [
+    "terraza",
+    "ascensor",
+    "aire_acondicionado",
+    "parking",
+    "parking_incluido_precio",
+    "orientacion_n",
+    "orientacion_s",
+    "orientacion_e",
+    "orientacion_o",
+    "trastero",
+    "armarios",
+    "piscina",
+    "portero",
+    "jardin",
+    "duplex",
+    "estudio",
+    "arico",
+    "exterior_interior",
+    "nueva_construccion",
+    "a_reformar",
+    "buen_estado",
 ]

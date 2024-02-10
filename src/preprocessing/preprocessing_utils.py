@@ -1,13 +1,28 @@
 import pandas as pd
 from ydata_profiling import ProfileReport
+import seaborn as sns
+import matplotlib.pyplot as plt
+import os
 
 
-def generate_pandas_profiling_report(df: pd.DataFrame):
+def generate_pandas_profiling_report(df: pd.DataFrame, save_path=None):
+    # Get the directory of the currently executing script
+    script_dir = os.path.dirname(__file__)
+
+    # Set the default save path
+    if save_path is None:
+        save_path = os.path.join(script_dir, '..', 'data_visualization')
+
+    # Create the directory if it doesn't exist
+    os.makedirs(save_path, exist_ok=True)
+
     # Generate the profile report
     profile = ProfileReport(df)
-    # Save the report to an HTML file
-    profile.to_file("profile_report.html")
 
+    # Save the report to an HTML file in the specified path
+    report_path = os.path.join(save_path, 'profile_report.html')
+    profile.to_file(report_path)
+    print(f"Profile report saved to: {report_path}")
 
 def remove_duplicated_anuncios_id(
     df_assets: pd.DataFrame, criteria: str = "last"
@@ -90,6 +105,111 @@ def treatment_missing_values(df: pd.DataFrame):
 
     rows_after = len(df)
 
-    print('Percentage of rows affected by dropping NaN values:",', (rows_before - rows_after)/rows_before)
+    print(
+        'Percentage of rows affected by dropping NaN values:",',
+        (rows_before - rows_after) / rows_before,
+    )
 
     return df
+
+
+def visualize_distribution(
+    df: pd.DataFrame, save_path=None, numerical_columns: list = None
+):
+    if numerical_columns is None:
+        numerical_columns = df.select_dtypes(include=["int64", "float64"]).columns
+    categorical_columns = df.select_dtypes(include=["object"]).columns
+
+    # Get the directory of the currently executing script
+    script_dir = os.path.dirname(__file__)
+
+    # Set the default save path
+    if save_path is None:
+        save_path = os.path.join(script_dir, "..", "data_visualization")
+
+    # Create the directory if it doesn't exist
+    os.makedirs(save_path, exist_ok=True)
+
+    # Grid of distribution plots for numerical variables
+    if len(numerical_columns) > 0:
+        f = pd.melt(df, value_vars=numerical_columns)
+        g = sns.FacetGrid(f, col="variable", col_wrap=4, sharex=False, sharey=False)
+        g.map(sns.histplot, "value")
+
+        if save_path:
+            plt.savefig(os.path.join(save_path, "distribution_plots.png"))
+        else:
+            plt.show()
+        plt.clf()  # Clear the plot after saving or displaying
+
+    # Plot counts of categorical variables
+    for column in categorical_columns:
+        plt.figure()
+        sns.countplot(data=df, x=column)
+        plt.title(f"Count of {column}")
+        plt.xlabel(column)
+        plt.ylabel("Count")
+
+        if save_path:
+            plt.savefig(os.path.join(save_path, f"{column}_count.png"))
+        else:
+            plt.show()
+        plt.clf()  # Clear the plot after saving or displaying
+
+
+def convert_binary_to_categorical(df:pd.DataFrame, binary_columns:list):
+    for column in binary_columns:
+        # Check if the column exists in the DataFrame and is binary
+        if column in df.columns and len(df[column].unique()) == 2:
+            # Convert the column to categorical dtype if it's not already categorical
+            if df[column].dtype != 'category':
+                df[column] = df[column].astype('category')
+            else:
+                print(f"Column '{column}' is already categorical.")
+        else:
+            print(f"Column '{column}' is not binary or does not exist in the DataFrame.")
+    return df
+
+def visualize_binary_distribution(df, binary_columns, save_path=None):
+    # Create a single FacetGrid for all binary columns with adjusted size and spacing
+    g = sns.FacetGrid(df.melt(value_vars=binary_columns), col='variable', col_wrap=3, height=5, aspect=1.5)
+
+    # Map count plots onto the FacetGrid
+    g.map(sns.countplot, 'value', palette='Set2')
+
+    # Set titles above each plot and adjust font size
+    g.set_titles(row_template='{row_name}', fontsize=8, pad=10)
+
+    # Set x and y labels for each plot and adjust font size
+    g.set_axis_labels('Class', 'Perc', fontsize=8)
+
+    # Iterate over each subplot to annotate the percentage of each class and set x-axis labels
+    for ax, title in zip(g.axes.flat, binary_columns):
+        # Calculate the total count for the column
+        total = len(df[title])
+
+        # Calculate and annotate the percentage of each class
+        for p in ax.patches:
+            percentage = '{:.1f}%'.format(100 * p.get_height() / total)
+            rounded_percentage = round(100 * p.get_height() / total)
+            x = p.get_x() + p.get_width() / 2
+            y = p.get_height()
+            ax.text(x, y, f'{rounded_percentage}%', ha='center', va='bottom', fontsize=8)
+
+    # Adjust layout to prevent overlap and increase space between rows
+    plt.tight_layout(pad=3.0)
+
+    # Save the plot if save_path is provided
+    if save_path is None:
+        script_dir = os.path.dirname(__file__)
+        save_path = os.path.join(script_dir, '..', 'data_visualization')
+
+    # Create the directory if it doesn't exist
+    os.makedirs(save_path, exist_ok=True)
+
+    # Save the plot
+    save_file_path = os.path.join(save_path, 'binary_distribution_plots.png')
+    plt.savefig(save_file_path)
+    plt.close()
+    print("Image saved successfully at:", save_file_path)
+
