@@ -56,7 +56,7 @@ NUM_VARIABLES_TO_SEE_DISTRIBUTION = [
     "area_construida",
     "amueblado",
     "precio_parking",
-    "cat_ano_construccion",
+    "antiguidade",
     "cat_n_max_pisos",
     "cat_n_vecinos",
     "cat_calidad",
@@ -83,8 +83,4 @@ BINARY_VARIABLES = [
     "duplex",
     "estudio",
     "arico",
-    "exterior_interior",
-    "nueva_construccion",
-    "a_reformar",
-    "buen_estado",
 ]

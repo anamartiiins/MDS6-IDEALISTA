@@ -3,6 +3,10 @@ from ydata_profiling import ProfileReport
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
+from sklearn.preprocessing import MinMaxScaler
+import tkinter as tk
+from tkinter import filedialog
+import threading
 
 
 def generate_pandas_profiling_report(df: pd.DataFrame, save_path=None):
@@ -11,18 +15,33 @@ def generate_pandas_profiling_report(df: pd.DataFrame, save_path=None):
 
     # Set the default save path
     if save_path is None:
-        save_path = os.path.join(script_dir, '..', 'data_visualization')
+        save_path = os.path.join(script_dir, "..", "data_visualization")
 
     # Create the directory if it doesn't exist
     os.makedirs(save_path, exist_ok=True)
 
-    # Generate the profile report
-    profile = ProfileReport(df)
+    # Define function to generate the profile report
+    def generate_report():
+        # Generate the profile report
+        profile = ProfileReport(df)
 
-    # Save the report to an HTML file in the specified path
-    report_path = os.path.join(save_path, 'profile_report.html')
-    profile.to_file(report_path)
-    print(f"Profile report saved to: {report_path}")
+        # Save the report to an HTML file in the specified path
+        report_path = os.path.join(save_path, "profile_report.html")
+        profile.to_file(report_path)
+        print(f"Profile report saved to: {report_path}")
+
+    # Run Tkinter-related operations in the main thread
+    root = tk.Tk()
+    root.withdraw()  # Hide the root window
+
+    # Create a thread to generate the profile report
+    report_thread = threading.Thread(target=generate_report)
+    report_thread.start()
+    report_thread.join()
+
+    # Quit the Tkinter application
+    root.quit()
+
 
 def remove_duplicated_anuncios_id(
     df_assets: pd.DataFrame, criteria: str = "last"
@@ -46,8 +65,6 @@ def remove_duplicated_anuncios_id(
     if validation_result.max() == 1:
         print("All duplicated id_anuncio values are associated with the same fecha.")
         df_assets_unique = df_assets.drop_duplicates(subset="id_anuncio", keep=criteria)
-
-        print("df_assets contains only the last occurrence of each 'id_anuncio'")
         # You can further validate if there are still duplicated 'id_anuncio' values
         duplicated_anuncios_after_drop = df_assets_unique[
             df_assets_unique.duplicated(subset="id_anuncio", keep=False)
@@ -85,6 +102,8 @@ def find_null_columns(df: pd.DataFrame):
         null_percentage = (null_count / total_rows) * 100
         null_columns_percentage[column] = null_percentage
 
+    print("Columns with missing values:", null_columns)
+
     for column, percentage in null_columns_percentage.items():
         print(f"{column}: {percentage:.2f}%")
 
@@ -97,11 +116,12 @@ def treatment_missing_values(df: pd.DataFrame):
 
     rows_before = len(df)
 
+    remove_columns_by_missing_values = ["ano_construccion"]
     # Drop this column because we have another column without nulls with same information
-    df = df.drop(columns=["ano_construccion"])
+    df = df.drop(columns=remove_columns_by_missing_values)
 
-    # Drop this NaN values as we does not have a coherent way to input missing values
-    df = df.dropna(subset=["n_piso", "exterior_interior"])
+    # Drop this NaN values as we do not have a coherent way to input missing values
+    df = df.dropna(subset=["n_piso", "exterior_interior", "cat_calidad"])
 
     rows_after = len(df)
 
@@ -110,7 +130,7 @@ def treatment_missing_values(df: pd.DataFrame):
         (rows_before - rows_after) / rows_before,
     )
 
-    return df
+    return remove_columns_by_missing_values, df
 
 
 def visualize_distribution(
@@ -157,31 +177,40 @@ def visualize_distribution(
         plt.clf()  # Clear the plot after saving or displaying
 
 
-def convert_binary_to_categorical(df:pd.DataFrame, binary_columns:list):
+def convert_binary_to_categorical(df: pd.DataFrame, binary_columns: list):
     for column in binary_columns:
         # Check if the column exists in the DataFrame and is binary
         if column in df.columns and len(df[column].unique()) == 2:
             # Convert the column to categorical dtype if it's not already categorical
-            if df[column].dtype != 'category':
-                df[column] = df[column].astype('category')
+            if df[column].dtype != "category":
+                df[column] = df[column].astype("category")
             else:
                 print(f"Column '{column}' is already categorical.")
         else:
-            print(f"Column '{column}' is not binary or does not exist in the DataFrame.")
+            print(
+                f"Column '{column}' is not binary or does not exist in the DataFrame."
+            )
     return df
+
 
 def visualize_binary_distribution(df, binary_columns, save_path=None):
     # Create a single FacetGrid for all binary columns with adjusted size and spacing
-    g = sns.FacetGrid(df.melt(value_vars=binary_columns), col='variable', col_wrap=3, height=5, aspect=1.5)
+    g = sns.FacetGrid(
+        df.melt(value_vars=binary_columns),
+        col="variable",
+        col_wrap=3,
+        height=5,
+        aspect=1.5,
+    )
 
     # Map count plots onto the FacetGrid
-    g.map(sns.countplot, 'value', palette='Set2')
+    g.map(sns.countplot, "value", palette="Set2")
 
     # Set titles above each plot and adjust font size
-    g.set_titles(row_template='{row_name}', fontsize=8, pad=10)
+    g.set_titles(row_template="{row_name}", fontsize=8, pad=10)
 
     # Set x and y labels for each plot and adjust font size
-    g.set_axis_labels('Class', 'Perc', fontsize=8)
+    g.set_axis_labels("Class", "Perc", fontsize=8)
 
     # Iterate over each subplot to annotate the percentage of each class and set x-axis labels
     for ax, title in zip(g.axes.flat, binary_columns):
@@ -190,11 +219,13 @@ def visualize_binary_distribution(df, binary_columns, save_path=None):
 
         # Calculate and annotate the percentage of each class
         for p in ax.patches:
-            percentage = '{:.1f}%'.format(100 * p.get_height() / total)
+            percentage = "{:.1f}%".format(100 * p.get_height() / total)
             rounded_percentage = round(100 * p.get_height() / total)
             x = p.get_x() + p.get_width() / 2
             y = p.get_height()
-            ax.text(x, y, f'{rounded_percentage}%', ha='center', va='bottom', fontsize=8)
+            ax.text(
+                x, y, f"{rounded_percentage}%", ha="center", va="bottom", fontsize=8
+            )
 
     # Adjust layout to prevent overlap and increase space between rows
     plt.tight_layout(pad=3.0)
@@ -202,14 +233,113 @@ def visualize_binary_distribution(df, binary_columns, save_path=None):
     # Save the plot if save_path is provided
     if save_path is None:
         script_dir = os.path.dirname(__file__)
-        save_path = os.path.join(script_dir, '..', 'data_visualization')
+        save_path = os.path.join(script_dir, "..", "data_visualization")
 
     # Create the directory if it doesn't exist
     os.makedirs(save_path, exist_ok=True)
 
     # Save the plot
-    save_file_path = os.path.join(save_path, 'binary_distribution_plots.png')
+    save_file_path = os.path.join(save_path, "binary_distribution_plots.png")
     plt.savefig(save_file_path)
     plt.close()
     print("Image saved successfully at:", save_file_path)
 
+
+def correlation_values(df: pd.DataFrame, save_path: str = None, threshold: float = 0.8):
+    # Select numerical columns
+    df_numerical_columns = df.select_dtypes(include=["int64", "float64"])
+
+    # Calculate correlation matrix
+    correlation_matrix = df_numerical_columns.corr()
+
+    # Find variable pairs with correlation greater than the threshold
+    correlated_variables = []
+    for i in range(len(correlation_matrix.columns)):
+        for j in range(i + 1, len(correlation_matrix.columns)):
+            if abs(correlation_matrix.iloc[i, j]) > threshold:
+                correlated_variables.append(
+                    (
+                        correlation_matrix.columns[i],
+                        correlation_matrix.columns[j],
+                        correlation_matrix.iloc[i, j],
+                    )
+                )
+
+    # Increase the size of the heatmap
+    plt.figure(figsize=(20, 15))  # Adjust dimensions as needed
+
+    # Plot the heatmap
+    sns.heatmap(
+        correlation_matrix, annot=True, cmap="coolwarm", linewidths=0.5, fmt=".1f"
+    )
+    plt.title("Correlation Matrix")
+    plt.tight_layout()
+
+    # Save the plot if save_path is provided
+    if save_path is None:
+        script_dir = os.path.dirname(__file__)
+        save_path = os.path.join(script_dir, "..", "data_visualization")
+
+    # Create the directory if it doesn't exist
+    os.makedirs(save_path, exist_ok=True)
+
+    # Save the plot
+    save_file_path = os.path.join(save_path, "correlation_matrix.png")
+    plt.savefig(save_file_path)
+    plt.close()
+
+    # Print correlated variable pairs with their correlation coefficients
+    for pair in correlated_variables:
+        print(f"Correlated variables: {pair[0]}, {pair[1]}, Correlation: {pair[2]}")
+
+    remove_columns_by_correlations = ["parking_incluido_precio"]
+
+    df = df.drop(columns=remove_columns_by_correlations)
+
+    return remove_columns_by_correlations, df, correlation_matrix, correlated_variables
+
+
+def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
+    # It assigns 1 when flatlocationid is 1 (internal), otherwise 0.
+    df["interior"] = (df["exterior_interior"] == 1).astype(int)
+
+    # Create a new variable that contains information about the status of the inmueble. With this, we avoid to drop one of the columns by correlation and also can apply order_encoding (done) or target_encoding
+    df["status_inmueble"] = (
+        (df["nueva_construccion"] * 1)
+        + (df["buen_estado"] * 2)
+        + (df["a_reformar"] * 3)
+    )
+
+    # Create a new variable that adds information to year construction.
+    df["antiguidade"] = 2018 - df["cat_ano_construccion"]
+
+    new_columns = ["interior", "status_inmueble", "antiguidade"]
+
+    columns_to_drop = [
+        "cat_ano_construccion",
+        "nueva_construccion",
+        "buen_estado",
+        "a_reformar",
+        "exterior_interior",
+    ]
+
+    df = df.drop(columns=columns_to_drop)
+
+    return new_columns, columns_to_drop, df
+
+
+def standardize_variables(df: pd.DataFrame, columns: list):
+    ## TODO: define which variables do we should standardize and apply it in preprocessing.
+
+    # Step 1: Standardize the target variable "precio" using Min-Max scaling
+    scaler = MinMaxScaler()
+    for col in columns:
+        df[col + "_scaled"] = scaler.fit_transform(df[[col]])
+
+    df = df.drop(colums=[columns])
+
+    # # Step 2: Apply the inverse transformation to revert the standardized values back to the original scale
+    # for col in columns:
+    #     df[col] = scaler.inverse_transform(df[[col+'_scaled']])
+
+    return df
