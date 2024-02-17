@@ -2,6 +2,7 @@ import pandas as pd
 from ydata_profiling import ProfileReport
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 from sklearn.preprocessing import MinMaxScaler
 import tkinter as tk
@@ -132,23 +133,10 @@ def treatment_missing_values(df: pd.DataFrame):
 
     return remove_columns_by_missing_values, df
 
-
-def visualize_distribution(
-    df: pd.DataFrame, save_path=None, numerical_columns: list = None
-):
+def visualize_distribution(df: pd.DataFrame, save_path=None, numerical_columns: list = None):
     if numerical_columns is None:
         numerical_columns = df.select_dtypes(include=["int64", "float64"]).columns
     categorical_columns = df.select_dtypes(include=["object"]).columns
-
-    # Get the directory of the currently executing script
-    script_dir = os.path.dirname(__file__)
-
-    # Set the default save path
-    if save_path is None:
-        save_path = os.path.join(script_dir, "..", "data_visualization")
-
-    # Create the directory if it doesn't exist
-    os.makedirs(save_path, exist_ok=True)
 
     # Grid of distribution plots for numerical variables
     if len(numerical_columns) > 0:
@@ -164,7 +152,7 @@ def visualize_distribution(
 
     # Plot counts of categorical variables
     for column in categorical_columns:
-        plt.figure()
+        plt.figure(figsize=(12, 8))
         sns.countplot(data=df, x=column)
         plt.title(f"Count of {column}")
         plt.xlabel(column)
@@ -265,16 +253,19 @@ def correlation_values(df: pd.DataFrame, save_path: str = None, threshold: float
                     )
                 )
 
+    mask = np.triu(np.ones_like(correlation_matrix, dtype=bool))
     # Increase the size of the heatmap
-    plt.figure(figsize=(20, 15))  # Adjust dimensions as needed
+    plt.figure(figsize=(10, 8))  # Adjust dimensions as needed
 
     # Plot the heatmap
     sns.heatmap(
-        correlation_matrix, annot=True, cmap="coolwarm", linewidths=0.5, fmt=".1f"
+        correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5, vmin=-1, vmax=1, mask=mask
     )
     plt.title("Correlation Matrix")
     plt.tight_layout()
+    plt.show()
 
+    #FIXME: não está a guardar direito. validar
     # Save the plot if save_path is provided
     if save_path is None:
         script_dir = os.path.dirname(__file__)
@@ -292,11 +283,7 @@ def correlation_values(df: pd.DataFrame, save_path: str = None, threshold: float
     for pair in correlated_variables:
         print(f"Correlated variables: {pair[0]}, {pair[1]}, Correlation: {pair[2]}")
 
-    remove_columns_by_correlations = ["parking_incluido_precio"]
-
-    df = df.drop(columns=remove_columns_by_correlations)
-
-    return remove_columns_by_correlations, df, correlation_matrix, correlated_variables
+    return correlation_matrix, correlated_variables
 
 
 def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
