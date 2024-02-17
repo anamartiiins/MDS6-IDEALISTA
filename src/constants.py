@@ -2,7 +2,7 @@ NEW_COLUMNS_NAMES = [
     "id_anuncio",
     "fecha",
     "precio",
-    "precio_unitario_km2",
+    "precio_unitario_m2",
     "tipologia_imueble",
     "operacion",
     "area_construida",
@@ -47,7 +47,7 @@ NEW_COLUMNS_NAMES = [
 ]
 
 
-REMOVE_COLUMNS_BY_INPUT = ["fecha", "precio_unitario_km2", "id_anuncio"]
+REMOVE_COLUMNS_BY_INPUT = ["fecha", "id_anuncio"]
 
 NUM_VARIABLES_TO_SEE_DISTRIBUTION = [
     "precio",

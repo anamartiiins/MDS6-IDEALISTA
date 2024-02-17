@@ -8,3 +8,8 @@ Pyarrow
 scikit-learn
 shapely
 geopandas
+pygeos
+pyshp
+descartes
+rtree
+matplotlib
