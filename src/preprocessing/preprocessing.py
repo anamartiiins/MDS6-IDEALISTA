@@ -14,13 +14,24 @@ from src.preprocessing.preprocessing_utils import (
     visualize_binary_distribution,
     correlation_values,
     feature_engineering,
+    get_location_name_w_gdf,
 )
 
 
 def dataset_preprocessing(
-    df_assets: pd.DataFrame, pandas_profiling: bool = False, distributions: bool = False
+    df_assets: pd.DataFrame,
+    df_polygons: pd.DataFrame,
+    pandas_profiling: bool = False,
+    distributions: bool = False,
 ) -> pd.DataFrame:
     print("Start")
+
+    #FIXME
+    aux=pd.read_csv(r'C:\Users\aimartins\OneDrive - Parfois, SA\Documents\GitHub\MDS6-IDEALISTA\data_spatial.csv')
+    aux = aux.drop(columns=['geometry', 'index_right', 'LOCATIONID', 'WKT', 'ZONELEVELID'])
+
+    df_assets=aux.copy()
+
     # Change columns names to friendly ones
     df_assets = df_assets.drop(columns=["ADTYPOLOGY", "ADOPERATION"])
     df_assets.columns = NEW_COLUMNS_NAMES
@@ -55,6 +66,8 @@ def dataset_preprocessing(
         correlation_matrix,
         correlated_variables,
     ) = correlation_values(df=df_assets)
+
+
 
     # See distributions
     if distributions:

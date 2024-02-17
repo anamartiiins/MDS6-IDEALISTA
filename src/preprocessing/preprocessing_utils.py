@@ -343,3 +343,21 @@ def standardize_variables(df: pd.DataFrame, columns: list):
     #     df[col] = scaler.inverse_transform(df[[col+'_scaled']])
 
     return df
+
+
+##FIXME
+def get_location_name_w_gdf(df_assets:pd.DataFrame, df_polygons:pd.DataFrame):
+    from shapely import wkt
+    from shapely.geometry import Point
+    import geopandas as gpd
+
+    # Convert the column WKT to geometry using geopandas
+    df_polygons['geometry'] = df_polygons['WKT'].apply(wkt.loads)
+    gdf_polygons = gpd.GeoDataFrame(df_polygons, geometry='geometry')
+
+    # Convert the LATITUDE and LONGITUDE coordinates from df_assets into geometric points
+    df_assets['geometry'] = df_assets.apply(lambda row: Point(row['longitud'], row['latitud']), axis=1)
+
+    # Create a GeoDataFrame for df_assets
+    gdf_sales = gpd.GeoDataFrame(df_assets, geometry='geometry')
+

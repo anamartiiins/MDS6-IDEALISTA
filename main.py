@@ -14,6 +14,6 @@ if __name__ == "__main__":
         root_dir="data"
     )
 
-    df = dataset_preprocessing(df_assets=df_assets)
+    df = dataset_preprocessing(df_assets=df_assets, df_polygons=df_polygons)
 
 

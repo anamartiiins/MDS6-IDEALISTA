@@ -6,3 +6,5 @@ pandas_profiling
 ydata-profiling
 Pyarrow
 scikit-learn
+shapely
+geopandas

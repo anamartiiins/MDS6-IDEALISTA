@@ -43,6 +43,7 @@ NEW_COLUMNS_NAMES = [
     "longitud",
     "latitud",
     "ciudad",
+    "barrio"
 ]
 
 
