@@ -5,10 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from sklearn.preprocessing import MinMaxScaler
-import tkinter as tk
-from tkinter import filedialog
-import threading
-
 
 def generate_pandas_profiling_report(df: pd.DataFrame, save_path=None):
     # Get the directory of the currently executing script
@@ -21,28 +17,15 @@ def generate_pandas_profiling_report(df: pd.DataFrame, save_path=None):
     # Create the directory if it doesn't exist
     os.makedirs(save_path, exist_ok=True)
 
-    # Define function to generate the profile report
-    def generate_report():
-        # Generate the profile report
-        profile = ProfileReport(df)
+    # Generate the profile report
+    profile = ProfileReport(df)
 
-        # Save the report to an HTML file in the specified path
-        report_path = os.path.join(save_path, "profile_report.html")
-        profile.to_file(report_path)
-        print(f"Profile report saved to: {report_path}")
+    # Save the report to an HTML file in the specified path
+    report_path = os.path.join(save_path, "profile_report.html")
+    profile.to_file(report_path)
+    print(f"Profile report saved to: {report_path}")
 
-    # Run Tkinter-related operations in the main thread
-    root = tk.Tk()
-    root.withdraw()  # Hide the root window
-
-    # Create a thread to generate the profile report
-    report_thread = threading.Thread(target=generate_report)
-    report_thread.start()
-    report_thread.join()
-
-    # Quit the Tkinter application
-    root.quit()
-
+    
 
 def remove_duplicated_anuncios_id(
     df_assets: pd.DataFrame, criteria: str = "last"
