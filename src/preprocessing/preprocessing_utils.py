@@ -275,7 +275,9 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     # It assigns 1 when flatlocationid is 1 (internal), otherwise 0.
     df["interior"] = (df["exterior_interior"] == 1).astype(int)
 
-    # Create a new variable that contains information about the status of the inmueble. With this, we avoid to drop one of the columns by correlation and also can apply order_encoding (done) or target_encoding
+    # Create a new variable that contains information about the status of the inmueble. 
+    # With this, we avoid to drop one of the columns by correlation and also can apply order_encoding (done) or target_encoding
+    # FIXME: see if it makes sense to drop this variable and change to a binary one, once we will not use info from nueva_construccion
     df["status_inmueble"] = (
         (df["nueva_construccion"] * 1)
         + (df["buen_estado"] * 2)
@@ -298,6 +300,34 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     df = df.drop(columns=columns_to_drop)
 
     return new_columns, columns_to_drop, df
+
+
+def detect_outliers(df, column_name, threshold=10):
+    """
+    Detect outliers in a DataFrame based on a specific column using the IQR (Interquartile Range) method.
+    
+    Parameters:
+        df (pandas.DataFrame): The DataFrame containing the data.
+        column_name (str): The name of the column to detect outliers.
+        threshold (float): The threshold multiplier for determining outliers. Default is 10.
+    
+    Returns:
+        pandas.DataFrame: A DataFrame containing the outlier observations.
+    """
+    Q1 = df[column_name].quantile(0.25)
+    Q3 = df[column_name].quantile(0.75)
+
+    # Calculate the IQR (Interquartile Range)
+    IQR = Q3 - Q1
+
+    # Calculate the lower and upper bounds for outlier detection
+    lower_bound = Q1 - (threshold * IQR)
+    upper_bound = Q3 + (threshold * IQR)
+
+    # Detect and return the outliers
+    outliers = df[(df[column_name] < lower_bound) | (df[column_name] > upper_bound)]
+
+    return outliers
 
 
 def standardize_variables(df: pd.DataFrame, columns: list):

@@ -66,6 +66,10 @@ NUM_VARIABLES_TO_SEE_DISTRIBUTION = [
     "distancia_puerta_sol",
     "distancia_metro",
     "distancia_castellana",
+    'precio_unitario_m2',
+    'precio_mean_barrio',
+    'precio_unitario_m2_mean_barrio',
+    'status_imueble'
 ]
 
 BINARY_VARIABLES = [
