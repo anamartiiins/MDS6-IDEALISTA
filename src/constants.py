@@ -49,7 +49,7 @@ NEW_COLUMNS_NAMES = [
 
 REMOVE_COLUMNS_BY_INPUT = ["fecha", "id_anuncio"]
 
-IDEALISTA_COLORS = ["#ffcc66", "#ff6666", "#99cc00", "#3399ff", "#9966ff", "#ff99cc", "#99cccc", "#ff6666"]
+REMOVE_COLUMNS_BY_CORRELATIONS = ['parking_incluido_precio']
 
 NUM_VARIABLES_TO_SEE_DISTRIBUTION = [
     "precio",
@@ -87,3 +87,5 @@ BINARY_VARIABLES = [
     "estudio",
     "arico",
 ]
+
+IDEALISTA_COLORS = ["#ffcc66", "#ff6666", "#99cc00", "#3399ff", "#9966ff", "#ff99cc", "#99cccc", "#ff6666"]

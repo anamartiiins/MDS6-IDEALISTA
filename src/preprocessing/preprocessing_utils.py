@@ -265,6 +265,8 @@ def correlation_values(df: pd.DataFrame, save_path: str = None, threshold: float
     # Print correlated variable pairs with their correlation coefficients
     for pair in correlated_variables:
         print(f"Correlated variables: {pair[0]}, {pair[1]}, Correlation: {pair[2]}")
+    
+    print('After evaluate which columns remove by coorelations, update list in constants REMOVE_COLUMNS_BY_CORRELATIONS')
 
     return correlation_matrix, correlated_variables
 
