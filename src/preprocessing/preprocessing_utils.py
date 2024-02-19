@@ -99,11 +99,7 @@ def treatment_missing_values(df: pd.DataFrame):
     null_columns = find_null_columns(df=df)
 
     rows_before = len(df)
-
-    remove_columns_by_missing_values = ["ano_construccion"]
-    # Drop this column because we have another column without nulls with same information
-    df = df.drop(columns=remove_columns_by_missing_values)
-
+    
     # Drop this NaN values as we do not have a coherent way to input missing values
     df = df.dropna(subset=["n_piso", "exterior_interior", "cat_calidad"])
 
@@ -114,7 +110,7 @@ def treatment_missing_values(df: pd.DataFrame):
         (rows_before - rows_after) / rows_before,
     )
 
-    return remove_columns_by_missing_values, df
+    return df
 
 def visualize_distribution(df: pd.DataFrame, save_path=None, numerical_columns: list = None):
     if numerical_columns is None:
@@ -284,13 +280,17 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
         + (df["a_reformar"] * 3)
     )
 
+    df['ano_construccion_aux'] = np.where(df['ano_construccion'].notnull(), df['ano_construccion'], df['cat_ano_construccion'])
+
     # Create a new variable that adds information to year construction.
-    df["antiguidade"] = 2018 - df["cat_ano_construccion"]
+    df["antiguidade"] = 2018 - df["ano_construccion_aux"]
 
     new_columns = ["interior", "status_inmueble", "antiguidade"]
 
     columns_to_drop = [
         "cat_ano_construccion",
+        "ano_construccion",
+        "ano_construccion_aux",
         "nueva_construccion",
         "buen_estado",
         "a_reformar",
