@@ -47,6 +47,7 @@ def calculate_metrics(y_true, y_pred, df_test):
     df_test_new['ape'] = (abs(y_true - y_pred) / y_true) * 100
     df_test_new['absolute_error'] = abs(y_true - y_pred)
     df_test_new['error']= y_true - y_pred
+    df_test_new['percentage_error'] = ((y_true - y_pred) / y_true) * 100
 
     return metrics, df_test_new
 
