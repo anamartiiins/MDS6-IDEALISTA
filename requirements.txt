@@ -1,3 +1,5 @@
+Se agradecería que se pusieran las versiones concretas para replicar de manera exacta y no hayan disonancias
+
 pandas
 numpy
 pydantic
