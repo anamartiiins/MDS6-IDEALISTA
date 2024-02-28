@@ -271,30 +271,25 @@ def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     # It assigns 1 when flatlocationid is 1 (internal), otherwise 0.
     df["interior"] = (df["exterior_interior"] == 1).astype(int)
 
-    # Create a new variable that contains information about the status of the inmueble. 
-    # With this, we avoid to drop one of the columns by correlation and also can apply order_encoding (done) or target_encoding
-    # FIXME: see if it makes sense to drop this variable and change to a binary one, once we will not use info from nueva_construccion
-    df["status_inmueble"] = (
-        (df["nueva_construccion"] * 1)
-        + (df["buen_estado"] * 2)
-        + (df["a_reformar"] * 3)
-    )
-
-    df['ano_construccion_aux'] = np.where(df['ano_construccion'].notnull(), df['ano_construccion'], df['cat_ano_construccion'])
 
     # Create a new variable that adds information to year construction.
-    df["antiguidade"] = 2018 - df["ano_construccion_aux"]
+    df["antiguidade"] = 2018 - df["cat_ano_construccion"]
 
-    new_columns = ["interior", "status_inmueble", "antiguidade"]
+    # Regarding the context of the project, we will only keep the houses that are not new construction
+    df = df[df.nueva_construccion==0].drop(columns=['nueva_construccion'])
+    
+    #Once this variables are complementar ones, we can drop one of them
+    df[['buen_estado', 'a_reformar']].value_counts()
+
+    df.loc[df['parking'] == 0, 'precio_parking'] = 1
+
+    new_columns = ["interior", "antiguidade"]
 
     columns_to_drop = [
         "cat_ano_construccion",
         "ano_construccion",
-        "ano_construccion_aux",
-        "nueva_construccion",
-        "buen_estado",
-        "a_reformar",
         "exterior_interior",
+        "a_reformar"
     ]
 
     df = df.drop(columns=columns_to_drop)
@@ -363,3 +358,19 @@ def get_location_name_w_gdf(df_assets:pd.DataFrame, df_polygons:pd.DataFrame):
     # Create a GeoDataFrame for df_assets
     gdf_sales = gpd.GeoDataFrame(df_assets, geometry='geometry')
 
+
+
+def hist_plot_outliers(df, name_variable):
+    # Create a new figure and axis for each plot
+    fig, ax = plt.subplots()
+
+    # Plot histogram with automatic bins
+    ax.hist(df[name_variable], bins='auto', edgecolor='black')
+
+    # Adding labels and title
+    ax.set_xlabel(name_variable)
+    ax.set_ylabel('Count')
+    ax.set_title('Histogram of ' + name_variable)
+
+    # Display the plot
+    plt.show()
