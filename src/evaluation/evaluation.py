@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+import pandas as pd
 
 def calculate_metrics(y_true, y_pred, df_test):
     """
@@ -12,16 +13,25 @@ def calculate_metrics(y_true, y_pred, df_test):
     Returns:
         dict: A dictionary containing the calculated metrics.
     """
-
+    # Calculate Mean Error
     me = np.mean(y_true - y_pred)
+
+    # Calculate Median Error
+    med = np.median(y_true - y_pred)
 
     # Calculate Mean Absolute Error (MAE)
     mae = np.mean(np.abs(y_true - y_pred))
     # mae = mean_absolute_error(y_true, y_pred)
 
+    # Calculate Median Absolute Error (MAED)
+    maed = np.median(np.abs(y_true - y_pred))
+
     # Calculate Mean Absolute Percentage Error (MAPE)
     mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
     # mape = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+
+    # Calculate Median Absolute Percentage Error (MAPED)
+    maped = np.mean(np.abs((y_true - y_pred) / y_true)) * 100
 
     # Calculate Root Mean Squared Error (RMSE)
     rmse = np.sqrt(np.mean((y_true - y_pred)**2))
@@ -33,27 +43,38 @@ def calculate_metrics(y_true, y_pred, df_test):
     r2 = 1 - (ss_residual / ss_total)
     # r2 = r2_score(y_true, y_pred)
 
-    
-    metrics = {
-        'ME - Mean Error': me,
-        'MAE - Mean Absolute Error': mae,
-        'MAPE - Mean Absolute Percentage Error': mape,
-        'RMSE - Root Mean Squared Error': rmse,
-        'R2 - Coefficient of Determination': r2
-    }
-    
+   
     # Create a DataFrame to hold the original data along with APE and absolute error
     df_test_new=df_test.copy()
     df_test_new['ape'] = (abs(y_true - y_pred) / y_true) * 100
     df_test_new['absolute_error'] = abs(y_true - y_pred)
     df_test_new['error']= y_true - y_pred
-    df_test_new['percentage_error'] = ((y_true - y_pred) / y_true) * 100
+    df_test_new['percentage_error'] = (abs((y_true - y_pred)) / y_true) * 100
+    percentage_error_higher_5 = len(df_test_new[df_test_new["percentage_error"] >= 5])/len(df_test_new)*100    
+    percentage_error_higher_10 = len(df_test_new[df_test_new["percentage_error"] >= 10])/len(df_test_new)*100    
+    percentage_error_higher_25 = len(df_test_new[df_test_new["percentage_error"] >= 25])/len(df_test_new)*100
+    
+        
+    metrics = {
+        'Model' : 'Precio medio por Barrio',
+        'ME - Mean Error': round(me.astype(int),0),
+        'MED - Median Error': round(med.astype(int),0),
+        'MAE - Mean Absolute Error': round(mae.astype(int),0),
+        'MAED - Median Absolute Error': round(maed.astype(int),2),
+        'MAPE - Mean Absolute Percentage Error': round(mape.astype(float),2),
+        'MAPED - Median Absolute Percentage Error': round(maped.astype(float),0),
+        'RMSE - Root Mean Squared Error': round(rmse.astype(int),2),
+        'R2 - Coefficient of Determination': round(r2.astype(float),2),
+        "Percentage error higher_5":percentage_error_higher_5,
+        "Percentage error higher_10":percentage_error_higher_10,
+        "Percentage error higher_25":percentage_error_higher_25
+    }
 
-    return metrics, df_test_new
+    metrics_df = pd.DataFrame(metrics, index=['Model'])
+    metrics_df = metrics_df.transpose()
 
-# Está bien la base, pero vamos a ir row a row para tener más facilidad de clusterizar y entender:
+    return metrics_df, df_test_new
 
-import numpy as np
 
 def calculate_metrics_by_row(y_true, y_pred):
     """
@@ -108,9 +129,6 @@ y_true_example = [100, 150, 200]
 y_pred_example = [90, 160, 180]
 metrics_example = calculate_metrics_by_row(y_true_example, y_pred_example)
 """
-
-import numpy as np
-from sklearn.metrics import mean_squared_error, r2_score
 
 def calculate_metrics_macro(y_true, y_pred):
     """
