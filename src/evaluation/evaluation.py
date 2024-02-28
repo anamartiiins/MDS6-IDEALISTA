@@ -51,8 +51,6 @@ def calculate_metrics(y_true, y_pred, df_test):
 
     return metrics, df_test_new
 
-# Está bien la base, pero vamos a ir row a row para tener más facilidad de clusterizar y entender:
-
 import numpy as np
 
 def calculate_metrics_by_row(y_true, y_pred):
@@ -172,3 +170,58 @@ macro_metrics_example = calculate_metrics_macro(y_true_example, y_pred_example)
 df_metrics = pd.DataFrame([macro_metrics_example])
 df_metrics
 """
+
+import pandas as pd
+import numpy as np
+
+def evaluate_regresion_model(model, df_test=df_test_util, columna = 'precio'):
+  """
+  Evalua un modelo de regresión utilizando un conjunto de prueba y calcula métricas de rendimiento.
+
+    Parámetros:
+    - model: Modelo de regresión entrenado.
+    - df_test: DataFrame de prueba que contiene características donde nos se ha entrenado.
+    - columna: Nombre de la columna objetivo en el DataFrame (por defecto, 'precio').
+
+    Salida:
+    Retorna un par de DataFrames:
+    1. df_test_evaluacion: DataFrame con las predicciones y métricas para cada muestra en el conjunto de prueba.
+    2. macro_features: DataFrame con métricas macro calculadas a partir de las predicciones.
+
+    Uso:
+    Suponiendo que tienes un modelo de regresión 'modelo_regresion' y un DataFrame de prueba 'df_test':
+    >>> df_evaluacion, macro_features = evaluate_model(modelo_regresion, df_test=df_test_util, columna='precio')
+
+  Esto proporcionará un DataFrame 'df_evaluacion' con las predicciones y métricas para cada muestra, 
+  así como un DataFrame 'macro_features' con métricas macro calculadas a partir de las predicciones.
+  """
+
+  # Hacemos una copia, que nos conocemos
+  df_test_evaluacion = df_test.copy()
+
+  # Dividir el DataFrame de prueba en características
+  X_test = df_test_evaluacion.drop(columna, axis=1)
+
+  # Agregar las predicciones al DataFrame de prueba
+  df_test_evaluacion['predicciones'] = model.predict(X_test)
+  # Create a DataFrame to hold the original data along with APE and absolute error
+  df_test_evaluacion['ape'] = (abs(df_test_evaluacion['predicciones'] - df_test_evaluacion[columna]) / df_test_evaluacion[columna]) * 100
+  df_test_evaluacion['absolute_error'] = abs(df_test_evaluacion['predicciones'] - df_test_evaluacion[columna])
+  df_test_evaluacion['error']= df_test_evaluacion['predicciones'] - df_test_evaluacion[columna]
+  df_test_evaluacion['percentage_error'] = ((df_test_evaluacion['predicciones'] - df_test_evaluacion[columna]) / df_test_evaluacion[columna]) * 100
+
+  # Crear un DataFrame para hold las características macro de las predicciones
+  macro_features = pd.DataFrame()
+
+  macro_features['ME'] = [df_test_evaluacion['error'].mean()]
+  macro_features['MAE'] = [df_test_evaluacion['absolute_error'].mean()]
+  macro_features['MPE'] = [df_test_evaluacion['percentage_error'].mean()]
+  macro_features['MAPE'] = [df_test_evaluacion['ape'].mean()]
+  macro_features['R2'] = [model.score(X_test, df_test_evaluacion[columna])]
+  macro_features['STDE'] = [df_test_evaluacion['error'].std()]
+  macro_features['RMSE'] = [((df_test_evaluacion['error']**2).mean())**0.5]
+
+  # Lo ajusto a 6 los decimales que si no hay que pensar mucho
+  macro_features = macro_features.round(6)
+
+  return df_test_evaluacion, macro_features
