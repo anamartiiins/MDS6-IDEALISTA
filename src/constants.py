@@ -93,3 +93,9 @@ BINARY_VARIABLES = [
 ]
 
 IDEALISTA_COLORS = ["#ffcc66", "#ff6666", "#99cc00", "#3399ff", "#9966ff", "#ff99cc", "#99cccc", "#ff6666"]
+
+BASE_PATH_EXPERIMENTS = r'src\evaluation'
+PATH_EVALUATION_CSV = r'src\evaluation\evaluation.csv'
+PATH_EVALUATION_DF_WITH_METRICS_CSV = r'src\evaluation\evaluation_df_with_metrics.csv'
+PATH_TRAIN = r'output_data/df_train_util.csv'
+PATH_TEST=r'output_data/df_test_util.csv'
