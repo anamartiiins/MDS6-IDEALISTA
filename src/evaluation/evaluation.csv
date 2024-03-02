@@ -1,3 +1,6 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:cf5dc5c6eae215c3978d106000e84f7f632fdd86c75e8b74509e2804bff0db42
-size 521
+version https://git-lfs.github.com/spec/v1,Model,RMSE - Root Mean Squared Error,MAPE - Mean Absolute Percentage Error,R2 - Coefficient of Determination,ME - Mean Error,MED - Median Error,MAE - Mean Absolute Error,MAED - Median Absolute Error,MAPED - Median Absolute Percentage Error,Percentage error lower_5,Percentage error lower_10,Percentage error lower_25,Model Folder
+oid sha256:cf5dc5c6eae215c3978d106000e84f7f632fdd86c75e8b74509e2804bff0db42,,,,,,,,,,,,,
+size 521,,,,,,,,,,,,,
+,Precio medio por barrio,"319,575",50.16,0.4,"-1,172","-30,483","171,293","84,913",33.0,8.37867247007617,16.80087051142546,39.46137105549511,experiment_Precio medio por barrio_20240302-223120
+,Precio medio por barrio,"319,575",50.16,0.4,"-1,172","-30,483","171,293","84,913",33.0,8.37867247007617,16.80087051142546,39.46137105549511,experiment_Precio medio por barrio_20240302-223332
+,Precio medio por barrio,"319,575",50.16,0.4,"-1,172","-30,483","171,293","84,913",33.0,8.37867247007617,16.80087051142546,39.46137105549511,experiment_Precio medio por barrio_20240302-223724
