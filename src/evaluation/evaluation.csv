@@ -1,3 +1,14 @@
 Model,RMSE - Root Mean Squared Error,MAPE - Mean Absolute Percentage Error,R2 - Coefficient of Determination,ME - Mean Error,MED - Median Error,MAE - Mean Absolute Error,MAED - Median Absolute Error,MAPED - Median Absolute Percentage Error,Percentage error lower_5,Percentage error lower_10,Percentage error lower_25,Model Folder
 Precio medio por barrio,"319,575",50.16,0.4,"-1,172","-30,483","171,293","84,913",33.0,8.37867247007617,16.80087051142546,39.46137105549511,experiment_Precio medio por barrio_20240302-224630
 RandomForest,"122,688",12.55,0.91,"3,113","-1,190","46,662","20,015",8.0,35.96300326441785,60.15778019586507,88.57453754080522,experiment_RandomForest_20240302-224854
+Decision Tree wo CV,"153,718",16.37,0.86,"2,870",0,"60,863","23,000",8.0,36.58868335146899,54.96191512513602,79.5157780195865,experiment_Decision Tree wo CV_20240303-112640
+RandomForest wo CV,"122,805",12.53,0.91,"3,350","-1,105","46,542","20,020",8.0,35.91403699673558,60.1360174102285,88.53645266594124,experiment_RandomForest wo CV_20240303-112751
+Gradient Boosting wo CV,"137,971",17.52,0.89,"4,518","-1,873","63,940","32,258",13.0,21.893362350380848,40.91403699673558,79.1240478781284,experiment_Gradient Boosting wo CV_20240303-112820
+eXtreme Gradient Boost wo CV,"133,452",14.94,0.9,"6,647",-426,"54,377","27,215",10.0,25.729053318824807,48.2752992383025,84.97823721436345,experiment_eXtreme Gradient Boost wo CV_20240303-112824
+CatBoost wo CV,"127,573",14.79,0.91,"6,403",-696,"53,512","27,477",11.0,25.23394994559304,47.81828073993471,85.22850924918389,experiment_CatBoost wo CV_20240303-113533
+Precio medio por barrio - precio unitario,955,21.32,0.68,-12,-85,689,505,15.0,17.6278563656148,34.11860718171926,70.58215451577802,experiment_Precio medio por barrio - precio unitario_20240303-151158
+Decision Tree wo CV precio_unitario_m2,893,16.21,0.72,6,0,547,293,9.0,34.047878128400434,52.76387377584331,79.96191512513602,experiment_Decision Tree wo CV precio_unitario_m2_20240303-151557
+RandomForest wo CV precio_unitario_m2,649,12.46,0.85,10,-14,410,248,8.0,35.32644178454842,59.994559303590854,88.80304678998911,experiment_RandomForest wo CV precio_unitario_m2_20240303-151824
+Gradient Boosting wo CV precio_unitario_m2,791,16.5,0.78,27,-26,549,383,12.0,22.437431991294883,43.2752992383025,81.26224156692057,experiment_Gradient Boosting wo CV precio_unitario_m2_20240303-151848
+eXtreme Gradient Boost wo CV precio_unitario_m2,701,14.36,0.83,26,-9,475,325,10.0,26.332970620239394,49.72252448313384,86.19695321001089,experiment_eXtreme Gradient Boost wo CV precio_unitario_m2_20240303-151852
+CatBoost wo CV precio_unitario_m2,697,14.26,0.83,32,-14,473,324,10.0,26.534276387377588,49.613710554951034,86.55603917301414,experiment_CatBoost wo CV precio_unitario_m2_20240303-151905

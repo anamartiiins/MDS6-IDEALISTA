@@ -10,6 +10,7 @@ from typing import Dict, Any
 import sklearn.base
 from catboost import CatBoost
 from lightgbm import LGBMModel
+import matplotlib.pyplot as plt
 from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
@@ -20,7 +21,6 @@ from sklearn.metrics import (
     f1_score,
     recall_score,
 )
-
 def calculate_metrics(y_true, y_pred, df_test, model_name):
     """
     Calculate various evaluation metrics including MAE, MAPE, RMSE, APE, and R-squared (R2).
@@ -429,6 +429,39 @@ def export_model(
         json.dump(summary, f, indent=4, ensure_ascii=False)
 
     return folder_name
+
+
+def save_graph_feature_importance(model, X_train, folder):
+    """
+    Extracts feature importances from the model (if available) and visualizes them.
+
+    Args:
+    - model: The trained machine learning model.
+    - X_train: The training data features.
+    - folder: The folder where the visualization will be saved.
+    """
+    # Check if the model supports feature importances
+    if hasattr(model, 'feature_importances_'):
+        # Extract feature importances
+        feature_importances = model.feature_importances_
+        
+        # Create a DataFrame for feature importances
+        feature_importance_df = pd.DataFrame({'Feature': X_train.columns, 'Importance': feature_importances})
+        
+        # Sort the DataFrame by importance in descending order
+        feature_importance_df = feature_importance_df.sort_values(by='Importance', ascending=False)
+        
+        # Create a plot to visualize feature importances
+        plt.figure(figsize=(15, 8))
+        plt.barh(range(len(feature_importances)), feature_importance_df['Importance'], tick_label=feature_importance_df['Feature'])
+        plt.xlabel('Importance')
+        plt.ylabel('Feature')
+        plt.title('Feature Importance')
+        plt.gca().invert_yaxis()  # Invert y-axis to have the highest importance at the top
+        
+        # Save the plot as an image file in the specified folder
+        plt.savefig(f'src/evaluation/{folder}/feature_importance.png')
+        plt.close()
 
 
 def calculate_metrics_by_row(y_true, y_pred):
