@@ -21,14 +21,19 @@ from sklearn.metrics import (
     f1_score,
     recall_score,
 )
-def calculate_metrics(y_true, y_pred, df_test, model_name):
+
+def calculate_metrics(y_true, y_pred, df_test, model_name, confidence_interval=0.05):
     """
-    Calculate various evaluation metrics including MAE, MAPE, RMSE, APE, and R-squared (R2).
+    Calculate various evaluation metrics including MAE, MAPE, RMSE, APE, R-squared (R2),
+    standard deviation of errors, and confidence interval.
     
     Parameters:
         y_true (array-like): The true values.
         y_pred (array-like): The predicted values.
-    
+        df_test (pd.DataFrame): DataFrame containing original data.
+        model_name (str): Name of the model.
+        confidence_interval (float): Confidence interval (default is 0.05).
+
     Returns:
         dict: A dictionary containing the calculated metrics.
     """
@@ -58,6 +63,13 @@ def calculate_metrics(y_true, y_pred, df_test, model_name):
     ss_total = np.sum((y_true - np.mean(y_true)) ** 2)
     r2 = 1 - (ss_residual / ss_total)
 
+    # Calculate Standard Deviation of Errors
+    std_errors = np.std(y_true - y_pred)
+
+    # Calculate Confidence Interval
+    ci_lower = np.percentile(y_true - y_pred, (confidence_interval / 2) * 100)
+    ci_upper = np.percentile(y_true - y_pred, 100 - (confidence_interval / 2) * 100)
+
     # Create a DataFrame to hold the original data along with APE and absolute error
     df_test_new = df_test.copy()
     df_test_new['ape'] = (abs(y_true - y_pred) / y_true) * 100
@@ -77,18 +89,19 @@ def calculate_metrics(y_true, y_pred, df_test, model_name):
         'MED - Median Error': '{:,.0f}'.format(round(float(med), 0)),
         'MAE - Mean Absolute Error': '{:,.0f}'.format(round(float(mae), 0)),
         'MAED - Median Absolute Error': '{:,.0f}'.format(round(float(maed), 2)),
-        'MAPED - Median Absolute Percentage Error':round(float(maped), 0),
-        "Percentage error lower_5":percentage_error_lower_5,
-        "Percentage error lower_10":percentage_error_lower_10,
-        "Percentage error lower_25":percentage_error_lower_25,
-        'Model Folder' : f"experiment_{model_name}_{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+        'MAPED - Median Absolute Percentage Error': round(float(maped), 0),
+        "Percentage error lower_5": percentage_error_lower_5,
+        "Percentage error lower_10": percentage_error_lower_10,
+        "Percentage error lower_25": percentage_error_lower_25,
+        'Standard Deviation of Errors': round(float(std_errors), 2),
+        'Confidence Interval Lower': round(float(ci_lower), 2),
+        'Confidence Interval Upper': round(float(ci_upper), 2),
+        'Model Folder': f"experiment_{model_name}_{datetime.now().strftime('%Y%m%d-%H%M%S')}",
     }
 
     metrics_df = pd.DataFrame(metrics, index=[0])
 
     return metrics_df, df_test_new
-
-
 
 
 class ProblemType(Enum):
