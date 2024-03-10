@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def remove_duplicated_assets_id(
@@ -182,6 +184,7 @@ def add_aggregated_features(df: pd.DataFrame, variable: str) -> pd.DataFrame:
             {
                 "precio": ["median", "mean", "std"],
                 "precio_unitario_m2": ["median", "mean", "std"],
+                "precio_logaritmico": ["median", "mean", "std"],
             }
         )
         .reset_index()
@@ -195,11 +198,19 @@ def add_aggregated_features(df: pd.DataFrame, variable: str) -> pd.DataFrame:
         f"precio_unitario_m2_median_{variable}",
         f"precio_unitario_m2_mean_{variable}",
         f"precio_unitario_m2_std_{variable}",
+        f"precio_logaritmico_median_{variable}",
+        f"precio_logaritmico_mean_{variable}",
+        f"precio_logaritmico_std_{variable}",
     ]
 
     df = df.merge(
         df_metrics[
-            [variable, f"precio_mean_{variable}", f"precio_unitario_m2_mean_{variable}"]
+            [
+                variable,
+                f"precio_mean_{variable}",
+                f"precio_unitario_m2_mean_{variable}",
+                f"precio_logaritmico_mean_{variable}",
+            ]
         ],
         on=[variable],
         how="inner",
@@ -208,5 +219,51 @@ def add_aggregated_features(df: pd.DataFrame, variable: str) -> pd.DataFrame:
     return df
 
 
-def ana():
-    print("ana")
+def correlation_values(df: pd.DataFrame, threshold: float = 0.8):
+    # Select numerical columns
+    df_numerical_columns = df.select_dtypes(include=["int64", "float64"])
+
+    # Calculate correlation matrix
+    correlation_matrix = df_numerical_columns.corr()
+
+    # Find variable pairs with correlation greater than the threshold
+    correlated_variables = []
+    for i in range(len(correlation_matrix.columns)):
+        for j in range(i + 1, len(correlation_matrix.columns)):
+            if abs(correlation_matrix.iloc[i, j]) > threshold:
+                correlated_variables.append(
+                    (
+                        correlation_matrix.columns[i],
+                        correlation_matrix.columns[j],
+                        correlation_matrix.iloc[i, j],
+                    )
+                )
+
+    mask = np.triu(np.ones_like(correlation_matrix, dtype=bool))
+    # Increase the size of the heatmap
+    plt.figure(figsize=(10, 8))  # Adjust dimensions as needed
+
+    # Plot the heatmap
+    sns.heatmap(
+        correlation_matrix,
+        annot=True,
+        cmap="coolwarm",
+        fmt=".2f",
+        linewidths=0.5,
+        vmin=-1,
+        vmax=1,
+        mask=mask,
+    )
+    plt.title("Correlation Matrix")
+    plt.tight_layout()
+    plt.show()
+
+    # Print correlated variable pairs with their correlation coefficients
+    for pair in correlated_variables:
+        print(f"Correlated variables: {pair[0]}, {pair[1]}, Correlation: {pair[2]}")
+
+    print(
+        "After evaluate which columns remove by correlations, update list in constants REMOVE_COLUMNS_BY_CORRELATIONS"
+    )
+
+    return correlation_matrix, correlated_variables
