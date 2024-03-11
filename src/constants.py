@@ -49,12 +49,17 @@ NEW_COLUMNS_NAMES = [
 ]
 
 
-REMOVE_COLUMNS_BY_INPUT = ["fecha", "id_anuncio"]
+REMOVE_COLUMNS_BY_INPUT = [
+    "fecha",
+    "id_anuncio",
+    "geometry",
+    "barrio_id",
+]
 
 REMOVE_COLUMNS_BY_CORRELATIONS = ["parking_incluido_precio", "a_reformar"]
 
 BASE_PATH_EXPERIMENTS = r"src\evaluation"
 PATH_EVALUATION_CSV = r"src\evaluation\evaluation.csv"
 PATH_EVALUATION_DF_WITH_METRICS_CSV = r"src\evaluation\evaluation_df_with_metrics.csv"
-PATH_TRAIN = r"output_data/df_train_util.csv"
-PATH_TEST = r"output_data/df_test_util.csv"
+PATH_TRAIN = r"output_data/df_train_util_v2.csv"
+PATH_TEST = r"output_data/df_test_util_v2.csv"

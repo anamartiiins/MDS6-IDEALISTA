@@ -2,6 +2,31 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.model_selection import train_test_split, GroupKFold
+
+from src.preprocessing.data_extraction import (
+    extract_initial_data,
+    get_info_from_polygons_and_ine,
+)
+
+# from src.preprocessing.preprocessing import (
+#     remove_duplicated_assets_id,
+#     find_single_value_columns,
+#     treatment_missing_values,
+#     feature_engineering,
+#     imputation_values_not_nulls,
+#     detect_outliers_by_percentile,
+#     add_aggregated_features,
+#     correlation_values,
+# )
+
+from src.constants import (
+    NEW_COLUMNS_NAMES,
+    REMOVE_COLUMNS_BY_INPUT,
+    REMOVE_COLUMNS_BY_CORRELATIONS,
+    PATH_TRAIN,
+    PATH_TEST,
+)
 
 
 def remove_duplicated_assets_id(
@@ -267,3 +292,81 @@ def correlation_values(df: pd.DataFrame, threshold: float = 0.8):
     )
 
     return correlation_matrix, correlated_variables
+
+
+def preprocessing(
+    df: pd.DataFrame,
+    df_polygons: pd.DataFrame,
+    df_ine: pd.DataFrame,
+    predict: bool = True,
+):
+    # Change columns names to friendly ones
+    df.columns = NEW_COLUMNS_NAMES
+
+    df = remove_duplicated_assets_id(df_assets=df, criteria="last")
+
+    # Add columns 'geometry', 'precio_logaritmico', 'cusec', 'barrio_id', 'barrio'
+    df = get_info_from_polygons_and_ine(df_polygons=df_polygons, df_ine=df_ine, df=df)
+
+    # Add variables interior (1/0) and antiguidade.
+    # Remove assets that are "nueva_construccion"
+    _, columns_to_drop_by_creation_of_new_ones, df = feature_engineering(df=df)
+    df = treatment_missing_values(
+        df=df, columns_to_drop_null_values=["n_piso", "cat_calidad", "interior"]
+    )
+    # Impute number of bathrooms and price_parking when asset does not have parking
+    df, median_bathrooms_per_sqm = imputation_values_not_nulls(df=df)
+
+    # Remove columns that only have one different value
+    remove_unique_value_columns = find_single_value_columns(df=df)
+    df = df.drop(columns=remove_unique_value_columns)
+
+    # Remove columns by input (team decision)
+    df = df.drop(columns=REMOVE_COLUMNS_BY_INPUT)
+
+    # Remove columns by creation of new ones (team decision)
+    df = df.drop(columns=columns_to_drop_by_creation_of_new_ones)
+
+    if not predict:
+        # Remove columns by correlations (team decision)
+        df = df.drop(columns=REMOVE_COLUMNS_BY_CORRELATIONS)
+
+        # Identifiy and remove outliers by percentile 995 for most correlated variables with target
+        df = detect_outliers_by_percentile(
+            df=df,
+            percentile=0.995,
+            variables_most_correlated_w_target=[
+                "n_banos",
+                "n_habitaciones",
+                "area_construida",
+                "distancia_castellana",
+            ],
+        )
+
+    correlation_matrix, _ = correlation_values(df=df, threshold=0.8)
+
+    df = add_aggregated_features(df=df, variable="barrio")
+
+    if predict:
+        df.to_csv(PATH_TEST)
+    else:
+        df.to_csv(PATH_TRAIN)
+
+    return df
+
+
+def split_data_train_test(df: pd.DataFrame):
+    # Remove target
+    X = df.drop(columns=["PRICE"])
+    y = df["PRICE"]
+
+    # Split train y test
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    # Keep predictors variables and target together to do preprocessing
+    df_train = pd.concat([y_train, X_train], axis=1)
+    df_test = pd.concat([y_test, X_test], axis=1)
+
+    return df_train, df_test

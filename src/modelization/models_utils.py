@@ -1,11 +1,21 @@
-import matplotlib as plt
 from typing import Any, List
-from sklearn.pipeline import Pipeline
+
+import matplotlib as plt
+from category_encoders import TargetEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.model_selection import (
+    cross_val_predict,
+    GridSearchCV,
+    RandomizedSearchCV,
+    GroupKFold,
+)
+from src.evaluation.evaluation import calculate_metrics
 
-def plot_predictions(df_evaluacion, macro_features, columna = 'precio'):
+
+def plot_predictions(df_evaluacion, macro_features, columna="precio"):
     """
     Plotea las predicciones contra los valores reales y muestra los datos macro.
 
@@ -25,16 +35,18 @@ def plot_predictions(df_evaluacion, macro_features, columna = 'precio'):
     print(macro_features.to_string(index=False))
 
     # Plotear las predicciones
-    plt.scatter(df_evaluacion[columna], df_evaluacion['predicciones'])
-    plt.plot([df_evaluacion[columna].min(), df_evaluacion[columna].max()],
-             [df_evaluacion[columna].min(), df_evaluacion[columna].max()],
-             linestyle='--', color='red', linewidth=2)
-    plt.xlabel('Valor Real')
-    plt.ylabel('Predicciones')
-    plt.title('Predicciones vs. Valores Reales')
+    plt.scatter(df_evaluacion[columna], df_evaluacion["predicciones"])
+    plt.plot(
+        [df_evaluacion[columna].min(), df_evaluacion[columna].max()],
+        [df_evaluacion[columna].min(), df_evaluacion[columna].max()],
+        linestyle="--",
+        color="red",
+        linewidth=2,
+    )
+    plt.xlabel("Valor Real")
+    plt.ylabel("Predicciones")
+    plt.title("Predicciones vs. Valores Reales")
     plt.show()
-
-
 
 
 def get_pipeline(
@@ -97,7 +109,7 @@ def get_pipeline(
     preprocessor = ColumnTransformer(
         transformers=[
             ("num", numeric_transformer, num_features),
-            # ("cat", categorical_transformer, cat_features),
+            ("cat", categorical_transformer, cat_features),
         ],
         verbose_feature_names_out=False,
     )
@@ -105,3 +117,89 @@ def get_pipeline(
     pipeline = Pipeline(steps=[("preprocessor", preprocessor), ("model", base_model)])
 
     return pipeline
+
+
+def train_model_with_pipeline(X_train, y_train, model):
+    """
+    Train the model until the pipeline.
+    """
+    pipeline = get_pipeline(
+        base_model=model,
+        impute=True,
+        scale=True,
+        encode=True,
+        encode_model=TargetEncoder(),
+        num_features=[col for col in X_train.columns if col != "barrio"],
+        cat_features=["barrio"],
+    )
+    pipeline.fit(X_train, y_train)
+    return pipeline
+
+
+def get_predictions_and_evaluate(
+    pipeline, X_train, y_train, target, cv_spatial: bool = False
+):
+    """
+    Get predictions and evaluate the model until metrics.
+    """
+    if cv_spatial:
+        barrio = X_train["barrio"].values
+        group_kfold = GroupKFold(n_splits=5)
+        city_kfold = group_kfold.split(X_train, y_train, barrio)
+        train_indices, test_indices = [
+            list(traintest) for traintest in zip(*city_kfold)
+        ]
+        city_cv = [*zip(train_indices, test_indices)]
+        y_pred = cross_val_predict(pipeline, X_train, y_train, cv=city_cv)
+    else:
+        y_pred = cross_val_predict(pipeline, X_train, y_train, cv=5)
+    model_name = type(pipeline.named_steps["model"]).__name__
+    metrics, df_metrics = calculate_metrics(
+        y_train, y_pred, X_train, model_name, target
+    )
+    return metrics, df_metrics
+
+
+# FIXME
+def get_best_model_with_hyperparameter(
+    pipeline, X_train, y_train, target, param_random
+):
+    """
+    Hyperparameter tuning with both options: grid and random.
+    """
+    model_name = type(pipeline.named_steps["model"]).__name__
+
+    # # Grid Search
+    # search_cv = GridSearchCV(
+    #     estimator=pipeline,
+    #     param_grid=param_grid,
+    #     scoring="neg_mean_squared_error",
+    #     cv=5,
+    # )
+    # search_cv.fit(X_train, y_train)
+    # best_model_grid = search_cv.best_estimator_
+    # y_pred_grid = cross_val_predict(best_model_grid, X_train, y_train, cv=5)
+    # best_model_metrics_grid, _ = calculate_metrics(
+    #     y_train, y_pred_grid, X_train, model_name + " (tuned_grid_search)", target)
+
+    # Randomized Search
+    search_cv_1 = RandomizedSearchCV(
+        estimator=pipeline,
+        param_distributions=param_random,
+        random_state=42,
+        verbose=1,
+    )
+    search_cv_1.fit(X_train, y_train)
+    print("random search finished")
+    best_model_random = search_cv_1.best_estimator_
+    y_pred_random = cross_val_predict(best_model_random, X_train, y_train, cv=5)
+    print("predictions finished")
+    best_model_metrics_random, _ = calculate_metrics(
+        y_train,
+        y_pred_random,
+        X_train,
+        model_name + " (tuned_randomized_search)",
+        target,
+    )
+    print("metrics finished")
+    return best_model_metrics_random
